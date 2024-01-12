@@ -71,7 +71,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       data: formData,
       options: Options(
         headers: {
-          'Authorization': 'Bearer ${appMain.currentUser.token}'
+          'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
         }
       )
     );
@@ -194,6 +194,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         if (postableNotifier.value > 0){
                           AddPost().then((value){
                             if (value == '200'){
+                              imageFiles.clear();
+                              videoFile.clear();
+                              imageNotifier.value = 0;
+                              videoNotifier.value = 0;
+                              textNotifier.value = 0;
+                              postableNotifier.value = 0;
                               Navigator.pop(context, newPostId);
                             }
                           });
@@ -221,13 +227,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   // Ava + Name
                   Row(
                     children: [
-                      Avatar(appMain.currentUser.avatar, MediaQuery.sizeOf(context).width / 7.5, online: '1',),
+                      Avatar(appMain.cache.currentUser.avatar, MediaQuery.sizeOf(context).width / 7.5, online: '1',),
                       SizedBox(width: 10,),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            appMain.currentUser.username,
+                            appMain.cache.currentUser.username,
                             style: TextStyle(
                               fontSize: 15.5,
                               fontWeight: FontWeight.w500

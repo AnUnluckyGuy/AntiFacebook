@@ -60,14 +60,14 @@ class _SignUpState extends State<SignUpPage>{
               Padding(
                 padding: EdgeInsets.fromLTRB(10, 50, 10, 10),
                 child: TextField(
-                  controller: emailTextController..text = preEmail,
-                  decoration: emailError.isEmpty
-                      ? _palette.inputBorderDecoration.copyWith(labelText: 'Email')
-                      : _palette.inputBorderDecoration.copyWith(
-                      labelText: 'Email',
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.red),
-                          borderRadius: BorderRadius.circular(15)))),
+                    controller: emailTextController..text = preEmail,
+                    decoration: emailError.isEmpty
+                        ? _palette.inputBorderDecoration.copyWith(labelText: 'Email')
+                        : _palette.inputBorderDecoration.copyWith(
+                        labelText: 'Email',
+                        enabledBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(color: Colors.red),
+                            borderRadius: BorderRadius.circular(15)))),
               ),
               Padding(
                 padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
@@ -113,14 +113,16 @@ class _SignUpState extends State<SignUpPage>{
                       passwordTextController.clear();
                       checkSignUpInfo(email, password);
                       if (emailError.isEmpty && passwordError.isEmpty){
-                        SignUpResponse responseData = await signUp(email, password);
-                        if (responseData.code == '1000'){
-                          appMain.currentUser.email = email;
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VerifyPage()));
-                        }
-                        else {
-                          setState(() {(preEmail, emailError = 'This user existed', passwordError);});
-                        }
+                        await signUp(email, password).then((value) {
+                          if (value == '1000'){
+                            appMain.cache.currentUser.email = email;
+                            appMain.cache.currentUser.password = password;
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VerifyPage()));
+                          }
+                          else {
+                            setState(() {(preEmail, emailError = '', passwordError = '');});
+                          }
+                        });
                       }
                       else {
                         setState(() {(preEmail, emailError, passwordError);});
@@ -170,7 +172,7 @@ class _SignUpState extends State<SignUpPage>{
     if (password.isEmpty) passwordError = 'Password can not be empty';
   }
 
-  Future<SignUpResponse> signUp(String email, String password) async {
+  Future signUp(String email, String password) async {
     var androidDeviceInfo = await DeviceInfoPlugin().androidInfo;
     final response = await http.post(
       Uri.parse('https://it4788.catan.io.vn/signup'),
@@ -184,30 +186,17 @@ class _SignUpState extends State<SignUpPage>{
       }),
     );
 
-    if (response.statusCode == 201){
-      return SignUpResponse.fromJson(jsonDecode(response.body));
-    }
-    else if (response.statusCode == 400){
-      return SignUpResponse.fromJson(jsonDecode(response.body));
-    }
-    else{
-      throw Exception('Failed to Sign Up');
-    }
-  }
-}
+    Map<String, dynamic> decodeResponse = jsonDecode(response.body);
 
-class SignUpResponse {
-  late String code;
-  late String message;
+    if (decodeResponse['code'] == '1000'){
 
-  SignUpResponse({required this.code, required this.message});
-
-  factory SignUpResponse.fromJson(Map<String, dynamic> json) {
-    if (json['code'] == '1000') {
-      return SignUpResponse(code: json['code'], message: json['message']);
     }
     else {
-      return SignUpResponse(code: json['code'], message: json['message']);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(decodeResponse['message']),
+      ));
     }
+
+    return decodeResponse['code'];
   }
 }

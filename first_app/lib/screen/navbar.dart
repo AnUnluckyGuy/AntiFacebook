@@ -1,3 +1,4 @@
+import 'package:first_app/screen/notification/notificationPage.dart';
 import 'package:first_app/screen/profile/profilePage.dart';
 import 'package:first_app/screen/videoPage.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,8 @@ import 'package:first_app/main.dart' as appMain;
 NewsFeedsPage newsFeedsPage = NewsFeedsPage();
 FriendPage friendPage = FriendPage();
 VideoPage videoPage = VideoPage();
-ProfilePage profilePage = ProfilePage(appMain.currentUser.id);
+ProfilePage profilePage = ProfilePage(appMain.cache.currentUser.id);
+NotificationPage notificationPage = NotificationPage();
 MenuPage menu = MenuPage();
 final List<IconData> icons = [
   Icons.home,
@@ -49,9 +51,8 @@ class _NavBarState extends State<NavBar> {
                   newsFeedsPage,
                   friendPage,
                   videoPage,
-                  //Scaffold(),
                   profilePage,
-                  Scaffold(),
+                  notificationPage,
                   menu
                 ],
               ),
@@ -71,7 +72,13 @@ class _NavBarState extends State<NavBar> {
                 onTap: (index){
                   if (selectedIndex.value == index){
                     if (index == 0 ){
-                      newsFeedsPage.refresh();
+                      newsFeedsPage.scrollToTop();
+                    }
+                    if (index == 1){
+                      friendPage.scrollToTop();
+                    }
+                    if (index == 2){
+                      videoPage.scrollToTop();
                     }
                     if (index == 3){
                       profilePage.refresh();

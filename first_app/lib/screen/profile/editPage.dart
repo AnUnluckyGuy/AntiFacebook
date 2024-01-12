@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:first_app/Model/userInfo.dart';
 import 'package:first_app/screen/profile/editDetailPage.dart';
-import 'package:first_app/screen/profile/profilePage.dart';
 import 'package:first_app/widget/avatar.dart';
 import 'package:first_app/widget/cover.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +25,7 @@ class _EditPageState extends State<EditPage> {
     var req = http.MultipartRequest('POST', Uri.parse('https://it4788.catan.io.vn/set_user_info'));
     req.headers.addAll({
       //'Content-Type': 'multipart/form-data; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     });
     req.files.add(http.MultipartFile.fromBytes(
         changeField,
@@ -43,7 +42,7 @@ class _EditPageState extends State<EditPage> {
     var req = http.MultipartRequest('POST', Uri.parse('https://it4788.catan.io.vn/set_user_info'));
     req.headers.addAll({
       //'Content-Type': 'multipart/form-data; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     });
     req.fields['city'] = city;
     final response = await req.send();
@@ -55,7 +54,7 @@ class _EditPageState extends State<EditPage> {
       Uri.parse('https://it4788.catan.io.vn/get_user_info'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         "user_id": id
@@ -70,7 +69,7 @@ class _EditPageState extends State<EditPage> {
     if (returnedImage?.path != null){
       SetUserImage(field, File(returnedImage!.path)).then((value){
         if (value == '201'){
-          GetUserInfo(appMain.currentUser.id).then((value){
+          GetUserInfo(appMain.cache.currentUser.id).then((value){
             if (field == 'avatar') widget.userInfo.avatar = value['data']['avatar'];
             else widget.userInfo.coverImage = value['data']['cover_image'];
             setState(() {});

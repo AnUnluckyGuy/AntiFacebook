@@ -23,7 +23,7 @@ class _OtherAllFriendPageState extends State<OtherAllFriendPage> {
       Uri.parse('https://it4788.catan.io.vn/get_user_friends'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'index': '0',

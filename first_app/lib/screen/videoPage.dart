@@ -12,17 +12,21 @@ import '../widget/postImageContainer.dart';
 import '../widget/videoPlayerWidget.dart';
 
 ValueNotifier<List<Post>> listPosts = ValueNotifier<List<Post>>([]);
+ScrollController scrollController = ScrollController();
 
 class VideoPage extends StatefulWidget {
   const VideoPage({super.key});
 
   @override
   State<VideoPage> createState() => _VideoPageState();
+
+  void scrollToTop(){
+    scrollController.animateTo(0, duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+  }
 }
 
 class _VideoPageState extends State<VideoPage> {
   bool loading = false;
-  ScrollController scrollController = ScrollController();
 
   @override
   void initState() {
@@ -55,68 +59,77 @@ class _VideoPageState extends State<VideoPage> {
     });
   }
 
+  Future<void> _refresh() {
+    List<Post> tmp = [];
+    listPosts.value = tmp;
+    return Future.delayed(Duration(seconds: 2));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: CustomScrollView(
-        controller: scrollController,
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.white,
-            title: Text(
-              'Watch',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 30),
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.white,
+              title: Text(
+                'Watch',
+                style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 30),
+              ),
+              actions: [
+                Container(
+                  margin: EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color:Colors.grey[300],
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: (){},
+                    icon: Icon(Icons.search, size: 25,),
+                    color: Colors.black,
+                  ),
+                )
+              ],
             ),
-            actions: [
-              Container(
-                margin: EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color:Colors.grey[300],
-                  shape: BoxShape.circle,
+            SliverToBoxAdapter(
+              child: Divider(
+                thickness: 10,
+              ),
+            ),
+            if (!loading)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Center(
+                      child: CircularProgressIndicator(
+                        backgroundColor: Colors.white,
+                      )
+                  ),
                 ),
-                child: IconButton(
-                  onPressed: (){},
-                  icon: Icon(Icons.search, size: 25,),
-                  color: Colors.black,
+              ),
+            if (loading)
+              SliverToBoxAdapter(
+                child: ValueListenableBuilder(
+                    valueListenable: listPosts,
+                    builder: (context, value, child) {
+                      return Column(
+                        //children: postsWidget
+                        children: [
+                          for (Post post in listPosts.value)...[
+                            PostContainer(post),
+                            Divider(thickness: 10,)
+                          ]
+                        ],
+                      );
+                    }
                 ),
               )
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Divider(
-              thickness: 10,
-            ),
-          ),
-          if (!loading)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Center(
-                    child: CircularProgressIndicator(
-                      backgroundColor: Colors.white,
-                    )
-                ),
-              ),
-            ),
-          if (loading)
-            SliverToBoxAdapter(
-              child: ValueListenableBuilder(
-                  valueListenable: listPosts,
-                  builder: (context, value, child) {
-                    return Column(
-                      //children: postsWidget
-                      children: [
-                        for (Post post in listPosts.value)...[
-                          PostContainer(post),
-                          Divider(thickness: 10,)
-                        ]
-                      ],
-                    );
-                  }
-              ),
-            )
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -127,7 +140,7 @@ Future<GetListPostsResponse> GetListVideos(String index) async {
     Uri.parse('https://it4788.catan.io.vn/get_list_videos'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     },
     body: jsonEncode(<String, String>{
       'index': index,
@@ -262,7 +275,7 @@ class _PostHeaderState extends State<PostHeader> {
             children: [
               GestureDetector(
                   onTap: (){
-                    if (post.author.id != appMain.currentUser.id){
+                    if (post.author.id != appMain.cache.currentUser.id){
                       Navigator.push(context, MaterialPageRoute(builder: (context) => OtherProfilePage(post.author.id)));
                     }
                     print('Avatar tap');
@@ -275,7 +288,7 @@ class _PostHeaderState extends State<PostHeader> {
                 children: [
                   GestureDetector(
                     onTap: (){
-                      if (post.author.id != appMain.currentUser.id){
+                      if (post.author.id != appMain.cache.currentUser.id){
                         Navigator.push(context, MaterialPageRoute(builder: (context) => OtherProfilePage(post.author.id)));
                       }
                       print('Name tap');

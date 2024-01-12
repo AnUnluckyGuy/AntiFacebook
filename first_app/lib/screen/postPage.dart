@@ -65,7 +65,7 @@ class _PostPageState extends State<PostPage> {
       Uri.parse('https://it4788.catan.io.vn/get_post'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'id': widget.id,
@@ -189,7 +189,7 @@ class _CreateCommentBlockState extends State<CreateCommentBlock> {
       Uri.parse('https://it4788.catan.io.vn/set_mark_comment'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'id': post.id,
@@ -234,7 +234,7 @@ class _CreateCommentBlockState extends State<CreateCommentBlock> {
       Uri.parse('https://it4788.catan.io.vn/set_mark_comment'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'id': post.id,
@@ -430,7 +430,7 @@ class PostPageHeader extends StatelessWidget {
           children: [
             GestureDetector(
                 onTap: (){
-                  if (post.author.id != appMain.currentUser.id){
+                  if (post.author.id != appMain.cache.currentUser.id){
                     Navigator.push(context, MaterialPageRoute(builder: (context) => OtherProfilePage(post.author.id)));
                   }
                   print('Avatar tap');
@@ -443,7 +443,7 @@ class PostPageHeader extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: (){
-                    if (post.author.id != appMain.currentUser.id){
+                    if (post.author.id != appMain.cache.currentUser.id){
                       Navigator.push(context, MaterialPageRoute(builder: (context) => OtherProfilePage(post.author.id)));
                     }
                     print('Name tap');
@@ -640,7 +640,7 @@ class _PostPageStatsState extends State<PostPageStats> {
       Uri.parse('https://it4788.catan.io.vn/feel'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'id': post.id,
@@ -656,7 +656,7 @@ class _PostPageStatsState extends State<PostPageStats> {
       Uri.parse('https://it4788.catan.io.vn/delete_feel'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'id': post.id,
@@ -840,7 +840,7 @@ class _PostPageCommentState extends State<PostPageComment> {
       Uri.parse('https://it4788.catan.io.vn/get_mark_comment'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'id': post.id,

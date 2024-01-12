@@ -78,7 +78,7 @@ class _PostHeaderState extends State<PostHeader> {
             children: [
               GestureDetector(
                 onTap: (){
-                  if (post.author.id != appMain.currentUser.id){
+                  if (post.author.id != appMain.cache.currentUser.id){
                     Navigator.push(context, MaterialPageRoute(builder: (context) => OtherProfilePage(post.author.id)));
                   }
                   print('Avatar tap');
@@ -91,7 +91,7 @@ class _PostHeaderState extends State<PostHeader> {
                 children: [
                   GestureDetector(
                     onTap: (){
-                      if (post.author.id != appMain.currentUser.id){
+                      if (post.author.id != appMain.cache.currentUser.id){
                         Navigator.push(context, MaterialPageRoute(builder: (context) => OtherProfilePage(post.author.id)));
                       }
                       print('Name tap');

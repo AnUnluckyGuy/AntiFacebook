@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../Model/post.dart';
 import 'package:first_app/main.dart' as appMain;
+import 'editPostPage.dart';
 import 'navbar.dart' as navbar;
 import '../widget/avatar.dart';
 import 'createPostPage.dart';
 
 //List<Post> listPosts = [];
 ValueNotifier<List<Post>> listPosts = ValueNotifier<List<Post>>([]);
+ScrollController scrollController = ScrollController();
 
 class NewsFeedsPage extends StatefulWidget {
   CreatePostContainer createPostContainer = CreatePostContainer();
@@ -28,10 +30,13 @@ class NewsFeedsPage extends StatefulWidget {
     List<Post> tmp = [];
     listPosts.value = tmp;
   }
+  
+  void scrollToTop(){
+    scrollController.animateTo(0, duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+  }
 }
 
 class _NewsFeedsPageState extends State<NewsFeedsPage> {
-  ScrollController scrollController = ScrollController();
 
   bool loading = true;
   @override
@@ -40,6 +45,7 @@ class _NewsFeedsPageState extends State<NewsFeedsPage> {
     scrollController.addListener(() {
       if (scrollController.position.atEdge){
         if (scrollController.position.pixels != 0) {
+          print('To end');
           addPost();
         }
       }
@@ -66,67 +72,76 @@ class _NewsFeedsPageState extends State<NewsFeedsPage> {
     });
   }
 
+  Future<void> _refresh() {
+    List<Post> tmp = [];
+    listPosts.value = tmp;
+    return Future.delayed(Duration(seconds: 2));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[300],
-      body: CustomScrollView(
-        controller: scrollController,
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.white,
-            title: Text(
-              'Anti Facebook',
-              style: TextStyle(
-                  color: Colors.lightBlue,
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -1.2
-              ),
-            ),
-            centerTitle: false,
-            floating: true,
-            actions: [
-              Container(
-                margin: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color:Colors.grey[200],
-                  shape: BoxShape.circle,
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.white,
+              title: Text(
+                'Anti Facebook',
+                style: TextStyle(
+                    color: Colors.lightBlue,
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -1.2
                 ),
-                child: IconButton(
-                  onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => PostSearchPage()));
-                  },
-                  icon: Icon(Icons.search, size: 25,),
-                  color: Colors.black,
+              ),
+              centerTitle: false,
+              floating: true,
+              actions: [
+                Container(
+                  margin: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color:Colors.grey[200],
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: (){
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => PostSearchPage()));
+                    },
+                    icon: Icon(Icons.search, size: 25,),
+                    color: Colors.black,
+                  ),
+                )
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: widget.createPostContainer
+            ),
+            if (!loading)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Center(
+                      child: CircularProgressIndicator(
+                        backgroundColor: Colors.white,
+                      )
+                  ),
+                ),
+              ),
+            if (loading)
+              SliverToBoxAdapter(
+                child: ValueListenableBuilder(
+                  valueListenable: listPosts,
+                  builder: (context, value, child) {
+                    return ListPostContainer();
+                  }
                 ),
               )
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: widget.createPostContainer
-          ),
-          if (!loading)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Center(
-                    child: CircularProgressIndicator(
-                      backgroundColor: Colors.white,
-                    )
-                ),
-              ),
-            ),
-          if (loading)
-            SliverToBoxAdapter(
-              child: ValueListenableBuilder(
-                valueListenable: listPosts,
-                builder: (context, value, child) {
-                  return ListPostContainer();
-                }
-              ),
-            )
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -138,7 +153,7 @@ Future DelPost(String id) async{
     Uri.parse('https://it4788.catan.io.vn/delete_post'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     },
     body: jsonEncode(<String, String>{
       "id": id
@@ -147,7 +162,7 @@ Future DelPost(String id) async{
 
   Map<String, dynamic> decodeResponse = jsonDecode(response.body);
   if (decodeResponse['code'] == '1000'){
-    appMain.currentUser.coins = int.parse(decodeResponse['data']['coins']);
+    appMain.cache.currentUser.coins = int.parse(decodeResponse['data']['coins']);
     navbar.menu.coinsChanged();
   }
   return response.statusCode.toString();
@@ -193,7 +208,7 @@ class _ListPostContainerState extends State<ListPostContainer> {
   }
 
   void _showBottomSheet(Post post) async {
-    if (post.author.id == appMain.currentUser.id){
+    if (post.author.id == appMain.cache.currentUser.id){
       await showDialog(
           context: context,
           builder: (context){
@@ -346,7 +361,7 @@ class _ListPostContainerState extends State<ListPostContainer> {
             });
           }
           else {
-            //await Navigator.push(context, MaterialPageRoute(builder: (context) => EditPostPage(post)));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EditPostPage(post)));
           }
         }
       });
@@ -425,7 +440,7 @@ class _ListPostContainerState extends State<ListPostContainer> {
                             ),
                             SizedBox(width: 5,),
                             Text(
-                              'Bâ thông báo về bài viết này',
+                              'Bât thông báo về bài viết này',
                               style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 15,
@@ -465,7 +480,10 @@ class _ListPostContainerState extends State<ListPostContainer> {
             );
           }
       ).then((value) async {
-        await Navigator.push(context, MaterialPageRoute(builder: (context) => ReportPage(post)));
+        if (value == 'report') {
+          await Navigator.push(context,
+              MaterialPageRoute(builder: (context) => ReportPage(post)));
+        }
       });
     }
   }
@@ -477,7 +495,7 @@ Future<GetListPostsResponse> GetListPosts(String index) async {
     Uri.parse('https://it4788.catan.io.vn/get_list_posts'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     },
     body: jsonEncode(<String, String>{
       'index': index,
@@ -544,7 +562,7 @@ class GetListPostsResponse {
   }
 }
 
-final avatarUrl = ValueNotifier(appMain.currentUser.avatar);
+final avatarUrl = ValueNotifier(appMain.cache.currentUser.avatar);
 
 class CreatePostContainer extends StatefulWidget {
 
@@ -552,7 +570,7 @@ class CreatePostContainer extends StatefulWidget {
   State<CreatePostContainer> createState() => _CreatePostContainerState();
 
   void avatarChange(){
-    avatarUrl.value = appMain.currentUser.avatar;
+    avatarUrl.value = appMain.cache.currentUser.avatar;
   }
 }
 

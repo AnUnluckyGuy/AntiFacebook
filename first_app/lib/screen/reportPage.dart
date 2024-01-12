@@ -25,7 +25,7 @@ class _ReportPageState extends State<ReportPage> {
         Uri.parse('https://it4788.catan.io.vn/set_block'),
         headers: <String, String> {
           'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer ${appMain.currentUser.token}'
+          'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
         },
         body: jsonEncode(<String, String> {
           'user_id': id
@@ -40,7 +40,7 @@ class _ReportPageState extends State<ReportPage> {
         Uri.parse('https://it4788.catan.io.vn/report_post'),
         headers: <String, String> {
           'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer ${appMain.currentUser.token}'
+          'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
         },
         body: jsonEncode(<String, String> {
           "id":widget.post.id,

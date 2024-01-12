@@ -3,7 +3,7 @@ import 'package:first_app/widget/avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/main.dart' as appMain;
 
-final avatarUrl = ValueNotifier(appMain.currentUser.avatar);
+final avatarUrl = ValueNotifier(appMain.cache.currentUser.avatar);
 
 class CreatePostContainer extends StatefulWidget {
 
@@ -11,7 +11,7 @@ class CreatePostContainer extends StatefulWidget {
   State<CreatePostContainer> createState() => _CreatePostContainerState();
 
   void avatarChange(){
-    avatarUrl.value = appMain.currentUser.avatar;
+    avatarUrl.value = appMain.cache.currentUser.avatar;
   }
 }
 

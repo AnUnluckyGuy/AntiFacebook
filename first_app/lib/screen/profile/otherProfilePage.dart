@@ -61,7 +61,7 @@ class _OtherProfilePageState extends State<OtherProfilePage> {
       Uri.parse('https://it4788.catan.io.vn/get_user_info'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         "user_id": id
@@ -75,7 +75,7 @@ class _OtherProfilePageState extends State<OtherProfilePage> {
     var req = http.MultipartRequest('POST', Uri.parse('https://it4788.catan.io.vn/set_user_info'));
     req.headers.addAll({
       //'Content-Type': 'multipart/form-data; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     });
     req.files.add(http.MultipartFile.fromBytes(
         changeField,
@@ -92,7 +92,7 @@ class _OtherProfilePageState extends State<OtherProfilePage> {
     GetUserInfo(widget.id).then((value){
       if (value.code == '1000'){
         setState(() {loading = true;});
-        appMain.currentUser.avatar = userInfo.avatar;
+        appMain.cache.currentUser.avatar = userInfo.avatar;
         navbar.menu.avatarChanged();
         navbar.newsFeedsPage.avatarChange();
       }
@@ -104,7 +104,7 @@ class _OtherProfilePageState extends State<OtherProfilePage> {
       Uri.parse('https://it4788.catan.io.vn/set_request_friend'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         "user_id": id
@@ -127,7 +127,7 @@ class _OtherProfilePageState extends State<OtherProfilePage> {
       body: CustomScrollView(
         controller: scrollController,
         slivers: [
-          if (userInfo.id != appMain.currentUser.id)...[
+          if (userInfo.id != appMain.cache.currentUser.id)...[
             SliverAppBar(
               backgroundColor: Colors.white,
               pinned: true,
@@ -154,7 +154,7 @@ class _OtherProfilePageState extends State<OtherProfilePage> {
                         padding: EdgeInsets.only(top: (MediaQuery.sizeOf(context).height / 9)),
                         child: Avatar(userInfo.avatar, MediaQuery.sizeOf(context).width / 2.5, online: userInfo.online,),
                       ),
-                      if (userInfo.id == appMain.currentUser.id)...[
+                      if (userInfo.id == appMain.cache.currentUser.id)...[
                         Padding(
                           padding: EdgeInsets.fromLTRB(
                               MediaQuery.sizeOf(context).width / 1.5,
@@ -504,7 +504,7 @@ Future<GetListPostsResponse> GetListPosts(String index) async {
     Uri.parse('https://it4788.catan.io.vn/get_list_posts'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     },
     body: jsonEncode(<String, String>{
       'user_id': userInfo.id,
@@ -589,7 +589,7 @@ class _FriendsContainerState extends State<FriendsContainer> {
       Uri.parse('https://it4788.catan.io.vn/get_user_friends'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'index': '0',

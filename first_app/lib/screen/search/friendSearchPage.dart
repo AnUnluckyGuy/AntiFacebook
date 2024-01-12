@@ -51,7 +51,7 @@ class _FriendSearchPageState extends State<FriendSearchPage> {
         Uri.parse('https://it4788.catan.io.vn/search_user'),
         headers: <String, String> {
           'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer ${appMain.currentUser.token}'
+          'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
         },
         body: jsonEncode(<String, String> {
           'keyword': keyword,

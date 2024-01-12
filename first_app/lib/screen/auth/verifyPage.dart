@@ -1,9 +1,9 @@
 import 'dart:convert';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:first_app/screen/auth/finishSignUpPage.dart';
 import 'package:first_app/screen/auth/signInPage.dart';
 import 'package:http/http.dart' as http;
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:first_app/main.dart' as appMain;
-import 'package:first_app/screen/auth/signUpPage.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/config/palette.dart' as palette;
 
@@ -74,13 +74,18 @@ class _verifyState extends State<VerifyPage>{
                         setState(() {(textError = 'Code can not be empty');});
                       }
                       else{
-                        VerifyResponse1 responseData = await checkVerifyCode(appMain.currentUser.email, verifyCode);
-                        if (responseData.code == '1000'){
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage()));
-                        }
-                        else {
-                          setState(() {(textError = 'Code is not correct');});
-                        }
+                        await checkVerifyCode(appMain.cache.currentUser.email, verifyCode).then((value) async {
+                          if (value == '1000'){
+                            await signIn(appMain.cache.currentUser.email, appMain.cache.currentUser.password).then((value) {
+                              if (value == '1000'){
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => FinishSignUpPage()));
+                              }
+                            });
+                          }
+                          else {
+                            setState(() {(textError = '');});
+                          }
+                        });
                       }
                     },
                     style: TextButton.styleFrom(
@@ -102,14 +107,7 @@ class _verifyState extends State<VerifyPage>{
                   width: double.infinity,
                   child: TextButton(
                     onPressed: () async {
-                      VerifyResponse responseData = await getVerifyCode(appMain.currentUser.email);
-                      final scaffold = ScaffoldMessenger.of(context);
-                      scaffold.showSnackBar(
-                        SnackBar(
-                          content: Text(responseData.verifyCode),
-                          action: SnackBarAction(label: 'UNDO', onPressed: scaffold.hideCurrentSnackBar),
-                        ),
-                      );
+                      await getVerifyCode(appMain.cache.currentUser.email);
                     },
                     style: TextButton.styleFrom(
                         backgroundColor: Colors.white,
@@ -132,82 +130,89 @@ class _verifyState extends State<VerifyPage>{
       ),
     );
   }
-}
 
-Future<VerifyResponse> getVerifyCode(String email) async {
-  final response = await http.post(
-    Uri.parse('https://it4788.catan.io.vn/get_verify_code'),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, String>{
-      'email': email
-    }),
-  );
+  Future getVerifyCode(String email) async {
+    final response = await http.post(
+      Uri.parse('https://it4788.catan.io.vn/get_verify_code'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'email': email
+      }),
+    );
 
-  if (response.statusCode == 200){
-    return VerifyResponse.fromJson(jsonDecode(response.body));
-  }
-  else if (response.statusCode == 403){
-    return VerifyResponse.fromJson(jsonDecode(response.body));
-  }
-  else{
-    throw Exception('Failed to get verify code');
-  }
-}
+    Map<String, dynamic> decodeResponse = jsonDecode(response.body);
 
-Future<VerifyResponse1> checkVerifyCode(String email, String verifyCode) async {
-  final response = await http.post(
-    Uri.parse('https://it4788.catan.io.vn/check_verify_code'),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, String>{
-      'email': email,
-      'code_verify': verifyCode
-    }),
-  );
-
-  if (response.statusCode == 200){
-    return VerifyResponse1.fromJson(jsonDecode(response.body));
-  }
-  else if (response.statusCode == 400){
-    return VerifyResponse1.fromJson(jsonDecode(response.body));
-  }
-  else{
-    throw Exception('Failed to check verify code');
-  }
-}
-
-class VerifyResponse {
-  late String code;
-  late String message;
-  late String verifyCode;
-
-  VerifyResponse({required this.code, required this.message, required this.verifyCode});
-
-  factory VerifyResponse.fromJson(Map<String, dynamic> json) {
-    if (json['code'] == '1000') {
-      return VerifyResponse(code: json['code'], message: json['message'], verifyCode: json['data']['verify_code']);
+    if (decodeResponse['code'] == '1000'){
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(decodeResponse['data']['verify_code']),
+      ));
     }
     else {
-      return VerifyResponse(code: json['code'], message: json['message'], verifyCode: "");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(decodeResponse['message']),
+      ));
     }
+    return decodeResponse['code'];
   }
-}
 
-class VerifyResponse1 {
-  late String code;
-  late String message;
+  Future checkVerifyCode(String email, String verifyCode) async {
+    final response = await http.post(
+      Uri.parse('https://it4788.catan.io.vn/check_verify_code'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'email': email,
+        'code_verify': verifyCode
+      }),
+    );
 
-  VerifyResponse1({required this.code, required this.message});
+    Map<String, dynamic> decodeResponse = jsonDecode(response.body);
 
-  factory VerifyResponse1.fromJson(Map<String, dynamic> json) {
-    if (json['code'] == '1000') {
-      return VerifyResponse1(code: json['code'], message: json['message']);
+    if (decodeResponse['code'] == '1000'){
+
     }
     else {
-      return VerifyResponse1(code: json['code'], message: json['message']);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(decodeResponse['message']),
+      ));
     }
+
+    return decodeResponse['code'];
+  }
+
+  Future signIn(String email, String password) async {
+    var androidDeviceInfo = await DeviceInfoPlugin().androidInfo;
+    final response = await http.post(
+      Uri.parse('https://it4788.catan.io.vn/login'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'email': email,
+        'password': password,
+        'uuid': androidDeviceInfo.id
+      }),
+    );
+
+    Map<String, dynamic> decodeResponse = jsonDecode(response.body);
+    if (decodeResponse['code'] == '1000'){
+      appMain.cache.currentUser.id = decodeResponse['data']['id'];
+      appMain.cache.currentUser.username = decodeResponse['data']['username'];
+      appMain.cache.currentUser.token = decodeResponse['data']['token'];
+      appMain.cache.currentUser.avatar = decodeResponse['data']['avatar'];
+      appMain.cache.currentUser.active = decodeResponse['data']['active'];
+      appMain.cache.currentUser.coins = int.parse(decodeResponse['data']['coins']);
+    }
+    else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error to verify'),
+      ));
+    }
+
+    return decodeResponse['code'];
   }
 }
+

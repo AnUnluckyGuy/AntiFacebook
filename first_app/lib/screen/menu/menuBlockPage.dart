@@ -30,7 +30,7 @@ class _MenuBlockPageState extends State<MenuBlockPage> {
     });
     listBlocks.clear();
     GetListBlocks('0').then((value) {
-      if (value == '200'){
+      if (value == '1000'){
         setState(() { loading = true; });
       }
       else {
@@ -44,7 +44,7 @@ class _MenuBlockPageState extends State<MenuBlockPage> {
 
   void addBlock(){
     GetListBlocks(listBlocks.length.toString()).then((value){
-      if (value == '200'){
+      if (value == '1000'){
         setState(() {});
       }
       else {
@@ -60,7 +60,7 @@ class _MenuBlockPageState extends State<MenuBlockPage> {
       Uri.parse('https://it4788.catan.io.vn/get_list_blocks'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'index': index,
@@ -79,7 +79,7 @@ class _MenuBlockPageState extends State<MenuBlockPage> {
       }
     }
 
-    return response.statusCode.toString();
+    return decodeResponse['code'];
   }
 
   Future Block(String id) async {
@@ -87,7 +87,7 @@ class _MenuBlockPageState extends State<MenuBlockPage> {
         Uri.parse('https://it4788.catan.io.vn/set_block'),
         headers: <String, String> {
           'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer ${appMain.currentUser.token}'
+          'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
         },
         body: jsonEncode(<String, String> {
           'user_id': id
@@ -102,7 +102,7 @@ class _MenuBlockPageState extends State<MenuBlockPage> {
       Uri.parse('https://it4788.catan.io.vn/unblock'),
       headers: <String, String> {
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String> {
         'user_id': id
@@ -129,7 +129,7 @@ class _MenuBlockPageState extends State<MenuBlockPage> {
   void refresh(){
     listBlocks.clear();
     GetListBlocks('0').then((value) {
-      if (value == '200'){
+      if (value == '1000'){
         setState(() { loading = true; });
       }
       else {

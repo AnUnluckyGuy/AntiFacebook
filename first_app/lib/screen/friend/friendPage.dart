@@ -9,153 +9,149 @@ import 'package:http/http.dart' as http;
 import  '../../config/dateTimeConfig.dart';
 import '../../widget/avatar.dart';
 
-List<FriendRequest> listFriendRequest = [];
-bool loading = false;
+//List<FriendRequest> listFriendRequest = [];
+ValueNotifier<List<FriendRequest>> listFriendRequest = ValueNotifier<List<FriendRequest>>([]);
 DateTimeConfig dtConfig = DateTimeConfig();
+ScrollController scrollController = ScrollController();
+
 class FriendPage extends StatefulWidget {
   const FriendPage({super.key});
 
   @override
   State<FriendPage> createState() => _FriendPageState();
+
+  void refresh(){
+    List<FriendRequest> tmp = [];
+    listFriendRequest.value = tmp;
+  }
+
+  void scrollToTop(){
+    scrollController.animateTo(0, duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+  }
 }
 
 class _FriendPageState extends State<FriendPage> {
-  @override
-  void initState() {
-    super.initState();
-    GetRequestedFriends('0').then((value) {
-      loading = true;
-      setState(() {});
-    });
-  }
 
-  Future<void> GetRequestedFriends(String index) async {
-    final response = await http.post(
-      Uri.parse('https://it4788.catan.io.vn/get_requested_friends'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
-      },
-      body: jsonEncode(<String, String>{
-        'index': index,
-        'count': "20",
-      }),
-    );
-
-    if (response.statusCode == 200){
-      GetRequestedFriendsResponse.fromJson(jsonDecode(response.body));
-    }
+  Future<void> _refresh() {
+    List<FriendRequest> tmp = [];
+    listFriendRequest.value = tmp;
+    return Future.delayed(Duration(seconds: 2));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: Colors.white,
-            title: Text(
-              'Bạn bè',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 25.5,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            actions: [
-              Container(
-                margin: EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color:Colors.grey[300],
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => FriendSearchPage()));
-                  },
-                  icon: Icon(Icons.search, size: 25,),
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: Colors.white,
+              title: Text(
+                'Bạn bè',
+                style: TextStyle(
                   color: Colors.black,
+                  fontSize: 25.5,
+                  fontWeight: FontWeight.w500,
                 ),
-              )
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: TextButton(
-                    onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => SuggestedFriendPage()));
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Text(
-                        'Gợi ý',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500
-                        ),
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      alignment: Alignment.center,
-                      backgroundColor: Colors.grey[300],
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50)
-                      )
-                    ),
+              ),
+              actions: [
+                Container(
+                  margin: EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color:Colors.grey[300],
+                    shape: BoxShape.circle,
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: TextButton(
+                  child: IconButton(
                     onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => AllFriendPage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => FriendSearchPage()));
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Text(
-                        'Bạn bè',
-                        style: TextStyle(
+                    icon: Icon(Icons.search, size: 25,),
+                    color: Colors.black,
+                  ),
+                )
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: TextButton(
+                      onPressed: (){
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => SuggestedFriendPage()));
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text(
+                          'Gợi ý',
+                          style: TextStyle(
                             color: Colors.black,
                             fontSize: 15,
                             fontWeight: FontWeight.w500
+                          ),
                         ),
                       ),
-                    ),
-                    style: TextButton.styleFrom(
+                      style: TextButton.styleFrom(
                         alignment: Alignment.center,
                         backgroundColor: Colors.grey[300],
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(50)
                         )
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Divider(
-                color: Colors.grey[300],
-                thickness: 0.5,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                    child: TextButton(
+                      onPressed: (){
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => AllFriendPage()));
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Text(
+                          'Bạn bè',
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500
+                          ),
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                          alignment: Alignment.center,
+                          backgroundColor: Colors.grey[300],
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50)
+                          )
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                FriendRequestHeader(),
-              ],
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                child: Divider(
+                  color: Colors.grey[300],
+                  thickness: 0.5,
+                ),
+              ),
             ),
-          )
-        ],
+            SliverToBoxAdapter(
+              child: ValueListenableBuilder(
+                valueListenable: listFriendRequest,
+                builder: (context, value, child) {
+                  return FriendRequestHeader();
+                }
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -169,8 +165,45 @@ class FriendRequestHeader extends StatefulWidget {
 }
 
 class _FriendRequestHeaderState extends State<FriendRequestHeader> {
+  bool loading = false;
+  initState(){
+    GetRequestedFriends('0').then((value){
+      if (value == '200')
+        setState(() {
+          loading = true;
+        });
+    });
+  }
+
+  Future GetRequestedFriends(String index) async {
+    final response = await http.post(
+      Uri.parse('https://it4788.catan.io.vn/get_requested_friends'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
+      },
+      body: jsonEncode(<String, String>{
+        'index': index,
+        'count': "30",
+      }),
+    );
+
+    if (response.statusCode == 200){
+      GetRequestedFriendsResponse.fromJson(jsonDecode(response.body));
+    }
+
+    return response.statusCode.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (listFriendRequest.value.length == 0){
+      GetRequestedFriends('0').then((value){
+        if (value == '200'){
+          setState(() {});
+        }
+      });
+    }
     return Container(
       child: !loading ? CircularProgressIndicator() :
         Column(
@@ -189,7 +222,7 @@ class _FriendRequestHeaderState extends State<FriendRequestHeader> {
                 ),
               ),
             ),
-            for (FriendRequest req in listFriendRequest)
+            for (FriendRequest req in listFriendRequest.value)
               FriendRequestContainer(req)
           ]
         ),
@@ -213,7 +246,7 @@ class _FriendRequestContainerState extends State<FriendRequestContainer> {
       Uri.parse('https://it4788.catan.io.vn/set_accept_friend'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'user_id': userId,
@@ -367,6 +400,7 @@ class GetRequestedFriendsResponse {
 
   factory GetRequestedFriendsResponse.fromJson(Map<String, dynamic> json) {
     if (json['code'] == '1000') {
+      List<FriendRequest> tmp = [...listFriendRequest.value];
       for (var request in json['data']['requests']) {
         FriendRequest req = FriendRequest();
         req.id = request['id'];
@@ -375,8 +409,9 @@ class GetRequestedFriendsResponse {
         req.sameFriends = request['same_friends'];
         req.created = request['created'];
 
-        listFriendRequest.add(req);
+        tmp.add(req);
       }
+      listFriendRequest.value = List.from(tmp);
     }
     return GetRequestedFriendsResponse(code: json['code'], message: json['message']);
   }

@@ -67,7 +67,7 @@ class MenuUserInfoPage extends StatelessWidget {
                               )
                             ),
                             Text(
-                              appMain.currentUser.username,
+                              appMain.cache.currentUser.username,
                               style: TextStyle(
                                 color: Colors.grey,
                                 fontSize: 13.5,

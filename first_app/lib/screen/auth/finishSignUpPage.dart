@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:first_app/main.dart' as appMain;
 import 'package:first_app/screen/navbar.dart';
-import 'package:first_app/screen/newsfeedsPage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:first_app/config/palette.dart' as palette;
@@ -107,14 +106,11 @@ class _FinishSignUpState extends State<FinishSignUpPage> {
                         });
                       } else {
                         String name = fname + lname;
-                        print("Here" + name);
-                        Response responseData = await finishSignUp(name);
-                        print(responseData.code);
-                        print(responseData.message);
-                        if (responseData.code == "1000") {
-                          // To Newsfeeds
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NavBar()));
-                        }
+                        await finishSignUp(name).then((value) {
+                          if (value == '1000'){
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NavBar()));
+                          }
+                        });
                       }
                     },
                     style: TextButton.styleFrom(
@@ -138,7 +134,7 @@ class _FinishSignUpState extends State<FinishSignUpPage> {
     );
   }
 
-  Future<Response> finishSignUp(String name) async {
+  Future finishSignUp(String name) async {
     var bodyDataMap = <String, dynamic>{
       'username': name,
     };
@@ -146,33 +142,13 @@ class _FinishSignUpState extends State<FinishSignUpPage> {
       Uri.parse('https://it4788.catan.io.vn/change_profile_after_signup'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(bodyDataMap),
     );
 
-    if (response.statusCode == 200) {
-      return Response.fromJson(jsonDecode(response.body));
-    } else if (response.statusCode == 401) {
-      return Response.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to finish sign up');
-    }
-  }
-}
+    Map<String, dynamic> decodeResponse = jsonDecode(response.body);
 
-class Response {
-  late String code;
-  late String message;
-
-  Response({required this.code, required this.message});
-
-  factory Response.fromJson(Map<String, dynamic> json) {
-    if (json['code'] == '1000') {
-      appMain.currentUser.username = json['data']['username'];
-      return Response(code: json['code'], message: json['message']);
-    } else {
-      return Response(code: json['code'], message: json['message']);
-    }
+    return decodeResponse['code'];
   }
 }

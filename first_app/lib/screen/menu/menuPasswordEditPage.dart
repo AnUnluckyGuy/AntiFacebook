@@ -27,7 +27,7 @@ class _MenuPasswordEditPageState extends State<MenuPasswordEditPage> {
       Uri.parse('https://it4788.catan.io.vn/change_password'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'password': controller1.text,
@@ -37,9 +37,14 @@ class _MenuPasswordEditPageState extends State<MenuPasswordEditPage> {
 
     Map<String, dynamic> decodeResponse = jsonDecode(response.body);
     if (decodeResponse['code'] == '1000'){
-      appMain.currentUser.token = decodeResponse['data']['token'];
+      appMain.cache.currentUser.token = decodeResponse['data']['token'];
     }
-    return response.statusCode.toString();
+    else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(decodeResponse['message']),
+      ));
+    }
+    return decodeResponse['code'];
   }
 
   @override
@@ -129,7 +134,7 @@ class _MenuPasswordEditPageState extends State<MenuPasswordEditPage> {
                       onPressed: () async {
                         if (check()){
                           await ChangePassword().then((value){
-                            if (value == '200'){
+                            if (value == '1000'){
                               Navigator.pop(context);
                             }
                             else {

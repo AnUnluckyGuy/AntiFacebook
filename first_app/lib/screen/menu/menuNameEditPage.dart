@@ -19,10 +19,12 @@ class _MenuNameEditPageState extends State<MenuNameEditPage> {
     var req = http.MultipartRequest('POST', Uri.parse('https://it4788.catan.io.vn/set_user_info'));
     req.headers.addAll({
       //'Content-Type': 'multipart/form-data; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     });
     req.fields['username'] = name;
     final response = await req.send();
+
+    //Map<String, dynamic> decodeResponse = jsonDecode(response.);
     return response.statusCode.toString();
   }
 
@@ -42,22 +44,8 @@ class _MenuNameEditPageState extends State<MenuNameEditPage> {
               pinned: true,
               backgroundColor: Colors.white,
               leading: IconButton(
-                onPressed: () async {
-                  if (nameEditController.text != appMain.currentUser.username){
-                    if (check(nameEditController.text)){
-                      print('Here');
-                      await SetUserName(nameEditController.text).then((value){
-                        print(value);
-                        if (value == '201'){
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage()));
-                        }
-                      });
-                    }
-                  }
-                  else {
-                    Navigator.pop(context);
-                  }
-                  //Navigator.pop(context);
+                onPressed: () {
+                  Navigator.pop(context);
                 },
                 icon: Image.asset(
                   'assets/images/backarrow.png',
@@ -90,7 +78,7 @@ class _MenuNameEditPageState extends State<MenuNameEditPage> {
                   ),
                   SizedBox(height: 10,),
                   TextField(
-                    controller: nameEditController..text = appMain.currentUser.username,
+                    controller: nameEditController..text = appMain.cache.currentUser.username,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                       focusedBorder: OutlineInputBorder(
@@ -109,11 +97,19 @@ class _MenuNameEditPageState extends State<MenuNameEditPage> {
                   Container(
                     width: double.infinity,
                     child: TextButton(
-                      onPressed: (){
-                        Navigator.pop(context);
+                      onPressed: () async {
+                        if (nameEditController.text != appMain.cache.currentUser.username){
+                          if (check(nameEditController.text)){
+                            await SetUserName(nameEditController.text).then((value){
+                              if (value == '201'){
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInPage()));
+                              }
+                            });
+                          }
+                        }
                       },
                       child: Text(
-                        'Hủy',
+                        'Thay đổi',
                         style: TextStyle(
                           color: Colors.black
                         ),

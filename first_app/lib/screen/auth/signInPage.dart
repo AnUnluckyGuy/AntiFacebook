@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:first_app/screen/auth/finishSignUpPage.dart';
 import 'package:first_app/screen/navbar.dart';
-import 'package:first_app/screen/newsfeedsPage.dart';
 import 'package:first_app/screen/auth/signUpPage.dart';
 import 'package:first_app/screen/auth/verifyPage.dart';
 import 'package:http/http.dart' as http;
@@ -103,26 +102,26 @@ class _SignInState extends State<SignInPage>{
                       passwordTextController.clear();
                       checkSignInInfo(email, password);
                       if (emailError.isEmpty && passwordError.isEmpty){
-                        SignInResponse responseData = await signIn(email, password);
-                        if (responseData.code == '1000'){
-                          print("Sign in success");
-                          switch(appMain.currentUser.active) {
-                            case "0":
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VerifyPage()));
-                              break;
-                            case "1"://To Newsfeeds
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NavBar()));
-                              break;
-                            case "-1"://Finish sign up
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => FinishSignUpPage()));
-                              break;
-                            default:
-                              break;
+                        await signIn(email, password).then((value) {
+                          if (value == '1000'){
+                            switch(appMain.cache.currentUser.active) {
+                              case "0":
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VerifyPage()));
+                                break;
+                              case "1"://To Newsfeeds
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NavBar()));
+                                break;
+                              case "-1"://Finish sign up
+                                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => FinishSignUpPage()));
+                                break;
+                              default:
+                                break;
+                            }
                           }
-                        }
-                        else {
-                          setState(() {(preEmail, emailError = responseData.message, passwordError = responseData.message);});
-                        }
+                          else {
+                            setState(() {(preEmail, emailError = '', passwordError = '');});
+                          }
+                        });
                       }
                       else {
                         setState(() {(preEmail, emailError, passwordError);});
@@ -154,7 +153,7 @@ class _SignInState extends State<SignInPage>{
                         foregroundColor: Colors.blue,
                         minimumSize: const Size(0, 50),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50),
+                          borderRadius: BorderRadius.circular(50),
                         ),
                         side: BorderSide(color: Colors.blue)
                     ),
@@ -196,7 +195,7 @@ class _SignInState extends State<SignInPage>{
     if (password.isEmpty) passwordError = 'Password can not be empty';
   }
 
-  Future<SignInResponse> signIn(String email, String password) async {
+  Future signIn(String email, String password) async {
     var androidDeviceInfo = await DeviceInfoPlugin().androidInfo;
     final response = await http.post(
       Uri.parse('https://it4788.catan.io.vn/login'),
@@ -210,36 +209,21 @@ class _SignInState extends State<SignInPage>{
       }),
     );
 
-    if (response.statusCode == 200){
-      return SignInResponse.fromJson(jsonDecode(response.body));
-    }
-    else if (response.statusCode == 403){
-      return SignInResponse.fromJson(jsonDecode(response.body));
-    }
-    else{
-      throw Exception('Failed to Sign In');
-    }
-  }
-}
-
-class SignInResponse {
-  late String code;
-  late String message;
-
-  SignInResponse({required this.code, required this.message});
-
-  factory SignInResponse.fromJson(Map<String, dynamic> json) {
-    if (json['code'] == '1000') {
-      appMain.currentUser.id = json['data']['id'];
-      appMain.currentUser.username = json['data']['username'];
-      appMain.currentUser.token = json['data']['token'];
-      appMain.currentUser.avatar = json['data']['avatar'];
-      appMain.currentUser.active = json['data']['active'];
-      appMain.currentUser.coins = int.parse(json['data']['coins']);
-      return SignInResponse(code: json['code'], message: json['message']);
+    Map<String, dynamic> decodeResponse = jsonDecode(response.body);
+    if (decodeResponse['code'] == '1000'){
+      appMain.cache.currentUser.id = decodeResponse['data']['id'];
+      appMain.cache.currentUser.username = decodeResponse['data']['username'];
+      appMain.cache.currentUser.token = decodeResponse['data']['token'];
+      appMain.cache.currentUser.avatar = decodeResponse['data']['avatar'];
+      appMain.cache.currentUser.active = decodeResponse['data']['active'];
+      appMain.cache.currentUser.coins = int.parse(decodeResponse['data']['coins']);
     }
     else {
-      return SignInResponse(code: json['code'], message: json['message']);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(decodeResponse['message']),
+      ));
     }
+
+    return decodeResponse['code'];
   }
 }

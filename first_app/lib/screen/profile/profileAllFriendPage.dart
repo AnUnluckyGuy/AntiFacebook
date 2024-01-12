@@ -27,7 +27,7 @@ class _ProfileAllFriendPageState extends State<ProfileAllFriendPage> {
       Uri.parse('https://it4788.catan.io.vn/get_user_friends'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'index': index,
@@ -249,7 +249,7 @@ class _ProfileAllFriendPageState extends State<ProfileAllFriendPage> {
       Uri.parse('https://it4788.catan.io.vn/unfriend'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         "user_id": selectedFriend.id
@@ -264,7 +264,7 @@ class _ProfileAllFriendPageState extends State<ProfileAllFriendPage> {
       Uri.parse('https://it4788.catan.io.vn/set_block'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         "user_id": selectedFriend.id

@@ -8,8 +8,8 @@ import 'package:first_app/main.dart' as appMain;
 import 'package:http/http.dart' as http;
 import '../navbar.dart' as navbar;
 
-final avatarNotifier = ValueNotifier(appMain.currentUser.avatar);
-final coinsNotifier = ValueNotifier(appMain.currentUser.coins);
+final avatarNotifier = ValueNotifier(appMain.cache.currentUser.avatar);
+final coinsNotifier = ValueNotifier(appMain.cache.currentUser.coins);
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -18,11 +18,11 @@ class MenuPage extends StatefulWidget {
   State<MenuPage> createState() => _MenuPageState();
 
   void avatarChanged(){
-    avatarNotifier.value = appMain.currentUser.avatar;
+    avatarNotifier.value = appMain.cache.currentUser.avatar;
   }
 
   void coinsChanged(){
-    coinsNotifier.value = appMain.currentUser.coins;
+    coinsNotifier.value = appMain.cache.currentUser.coins;
   }
 }
 
@@ -33,7 +33,7 @@ class _MenuPageState extends State<MenuPage> {
       Uri.parse('https://it4788.catan.io.vn/buy_coins'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'code': 'code',
@@ -41,9 +41,16 @@ class _MenuPageState extends State<MenuPage> {
       }),
     );
 
-    if (response.statusCode == 200){
-      appMain.currentUser.coins = jsonDecode(response.body)['data']['coins'];
-      coinsNotifier.value = appMain.currentUser.coins;
+    Map<String, dynamic> decodeResponse = jsonDecode(response.body);
+
+    if (decodeResponse['code'] == '1000'){
+      appMain.cache.currentUser.coins = decodeResponse['data']['coins'];
+      coinsNotifier.value = appMain.cache.currentUser.coins;
+    }
+    else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(decodeResponse['message']),
+      ));
     }
 
     return response.statusCode.toString();
@@ -97,7 +104,7 @@ class _MenuPageState extends State<MenuPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          appMain.currentUser.username,
+                          appMain.cache.currentUser.username,
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 17.5,
@@ -136,18 +143,8 @@ class _MenuPageState extends State<MenuPage> {
                   ),
                   Expanded(child: SizedBox()),
                   TextButton(
-                    onPressed: (){
-                      BuyCoin().then((value){
-                        if (value != '200'){
-                          final scaffold = ScaffoldMessenger.of(context);
-                          scaffold.showSnackBar(
-                              SnackBar(
-                                content: Text('Kiểm tra kết nối mạng'),
-                                //action: SnackBarAction(label: 'UNDO', onPressed: scaffold.hideCurrentSnackBar),
-                              )
-                          );
-                        }
-                      });
+                    onPressed: () async {
+                      await BuyCoin();
                     },
                     child: Text('Thêm coins'),
                   )

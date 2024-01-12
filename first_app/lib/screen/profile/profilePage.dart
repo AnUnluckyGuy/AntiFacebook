@@ -22,6 +22,7 @@ import 'package:path/path.dart';
 UserInfo userInfo = UserInfo();
 final refreshFriendCheck = ValueNotifier(true);
 final refreshPostCheck = ValueNotifier<List<Post>>([]);
+ScrollController scrollController = ScrollController();
 
 class ProfilePage extends StatefulWidget {
   late String id;
@@ -34,12 +35,15 @@ class ProfilePage extends StatefulWidget {
     List<Post> tmp = [];
     refreshPostCheck.value = tmp;
   }
+
+  void scrollToTop(){
+    scrollController.animateTo(0, duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+  }
 }
 
 class _ProfilePageState extends State<ProfilePage> {
   bool loading = false;
   String bottomSheetVisible = "none";
-  ScrollController scrollController = ScrollController();
 
   @override
   void initState() {
@@ -67,7 +71,7 @@ class _ProfilePageState extends State<ProfilePage> {
       Uri.parse('https://it4788.catan.io.vn/get_user_info'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         "user_id": id
@@ -81,7 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
     var req = http.MultipartRequest('POST', Uri.parse('https://it4788.catan.io.vn/set_user_info'));
     req.headers.addAll({
       //'Content-Type': 'multipart/form-data; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     });
     req.files.add(http.MultipartFile.fromBytes(
         changeField,
@@ -97,12 +101,18 @@ class _ProfilePageState extends State<ProfilePage> {
   void refresh(){
     GetUserInfo(widget.id).then((value){
       if (value.code == '1000'){
-        appMain.currentUser.avatar = userInfo.avatar;
+        appMain.cache.currentUser.avatar = userInfo.avatar;
         navbar.menu.avatarChanged();
         navbar.newsFeedsPage.avatarChange();
         setState(() {refreshPostCheck.value = refreshPostCheck.value; loading = true;});
       }
     });
+  }
+
+  Future<void> _refresh() {
+    List<Post> tmp = [];
+    refreshPostCheck.value = tmp;
+    return Future.delayed(Duration(seconds: 2));
   }
 
   @override
@@ -115,193 +125,117 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
     return Scaffold(
-      body: CustomScrollView(
-        controller: scrollController,
-        slivers: [
-          if (userInfo.id != appMain.currentUser.id)...[
-            SliverAppBar(
-              backgroundColor: Colors.white,
-              leading: IconButton(
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-                icon: Image.asset(
-                  'assets/images/backarrow.png',
-                  width: 25,
-                  height: 25,
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            if (userInfo.id != appMain.cache.currentUser.id)...[
+              SliverAppBar(
+                backgroundColor: Colors.white,
+                leading: IconButton(
+                  onPressed: (){
+                    Navigator.pop(context);
+                  },
+                  icon: Image.asset(
+                    'assets/images/backarrow.png',
+                    width: 25,
+                    height: 25,
+                  ),
                 ),
-              ),
-            )
-          ],
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                Stack(
-                  alignment: Alignment.topCenter,
-                  children: [
-                    Cover(userInfo.coverImage, MediaQuery.sizeOf(context).width, MediaQuery.sizeOf(context).height / 4.5),
-                    Padding(
-                      padding: EdgeInsets.only(top: (MediaQuery.sizeOf(context).height / 9)),
-                      child: Avatar(userInfo.avatar, MediaQuery.sizeOf(context).width / 2.5, online: userInfo.online,),
-                    ),
-                    if (userInfo.id == appMain.currentUser.id)...[
+              )
+            ],
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      Cover(userInfo.coverImage, MediaQuery.sizeOf(context).width, MediaQuery.sizeOf(context).height / 4.5),
                       Padding(
-                        padding: EdgeInsets.fromLTRB(
-                            MediaQuery.sizeOf(context).width / 1.5,
-                            MediaQuery.sizeOf(context).height / 7,
-                            0 ,0),
-                        child: Container(
-                          width: MediaQuery.sizeOf(context).width / 10,
-                          height: MediaQuery.sizeOf(context).width / 10,
-                          margin: EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color:Colors.grey[300],
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            onPressed: (){
-                              setState(() {bottomSheetVisible = 'Cover';});
-                            },
-                            icon: Image.asset(
-                              'assets/images/photo_camera.png',
-                            ),
-                            color: Colors.black,
-                          ),
-                        ),
+                        padding: EdgeInsets.only(top: (MediaQuery.sizeOf(context).height / 9)),
+                        child: Avatar(userInfo.avatar, MediaQuery.sizeOf(context).width / 2.5, online: userInfo.online,),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(top: MediaQuery.sizeOf(context).height / 9 + MediaQuery.sizeOf(context).width / 3)  ,
-                        child: Container(
-                          width: MediaQuery.sizeOf(context).width / 10,
-                          height: MediaQuery.sizeOf(context).width / 10,
-                          margin: EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color:Colors.grey[300],
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            onPressed: (){
-                              setState(() {bottomSheetVisible = 'Avatar';});
-                            },
-                            icon: Image.asset(
-                              'assets/images/photo_camera.png',
+                      if (userInfo.id == appMain.cache.currentUser.id)...[
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                              MediaQuery.sizeOf(context).width / 1.5,
+                              MediaQuery.sizeOf(context).height / 7,
+                              0 ,0),
+                          child: Container(
+                            width: MediaQuery.sizeOf(context).width / 10,
+                            height: MediaQuery.sizeOf(context).width / 10,
+                            margin: EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color:Colors.grey[300],
+                              shape: BoxShape.circle,
                             ),
-                            color: Colors.black,
+                            child: IconButton(
+                              onPressed: (){
+                                setState(() {bottomSheetVisible = 'Cover';});
+                              },
+                              icon: Image.asset(
+                                'assets/images/photo_camera.png',
+                              ),
+                              color: Colors.black,
+                            ),
                           ),
                         ),
-                      )
-                    ]
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Container(
-                    child: Text(
-                      userInfo.username,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500
+                        Padding(
+                          padding: EdgeInsets.only(top: MediaQuery.sizeOf(context).height / 9 + MediaQuery.sizeOf(context).width / 3)  ,
+                          child: Container(
+                            width: MediaQuery.sizeOf(context).width / 10,
+                            height: MediaQuery.sizeOf(context).width / 10,
+                            margin: EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color:Colors.grey[300],
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              onPressed: (){
+                                setState(() {bottomSheetVisible = 'Avatar';});
+                              },
+                              icon: Image.asset(
+                                'assets/images/photo_camera.png',
+                              ),
+                              color: Colors.black,
+                            ),
+                          ),
+                        )
+                      ]
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      child: Text(
+                        userInfo.username,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500
+                        ),
                       ),
                     ),
                   ),
-                ),
-                if (userInfo.id == appMain.currentUser.id)...[
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextButton(
-                              onPressed: (){},
-                              style: TextButton.styleFrom(
-                                backgroundColor: Color(0xff0064ff),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)
-                                )
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Image.asset(
-                                    'assets/images/plus.png',
-                                    color: Colors.white,
-                                    width: 15,
-                                    height: 15,
-                                  ),
-                                  SizedBox(width: 10,),
-                                  Text(
-                                    'Thêm vào tin',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500
-                                    ),
-                                  ),
-                                ],
-                              )
-                            ),
-                          ),
-                          SizedBox(width: 5,),
-                          TextButton(
-                              onPressed: () async {
-                                await Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditingPage(userInfo)))
-                                  .then((value){
-                                    refresh();
-                                });
-                              },
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.grey[300],
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)
-                                )
-                              ),
-                              child: Text(
-                                '...',
-                                style: TextStyle(
-                                  fontSize: 17.5,
-                                  color: Colors.black
-                                ),
-                              )
-                          )
-                        ],
-                      ),
-                    ),
-                  ]
-                  else...[
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextButton(
+                  if (userInfo.id == appMain.cache.currentUser.id)...[
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
                                 onPressed: (){},
                                 style: TextButton.styleFrom(
-                                    backgroundColor: Color(0xff0064ff),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10)
-                                    )
+                                  backgroundColor: Color(0xff0064ff),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)
+                                  )
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    if (userInfo.isFriend == '0')...[],
-                                    if (userInfo.isFriend == '1')...[
-                                      Image.asset(
-                                        'assets/images/isfriend.png',
-                                        color: Colors.white,
-                                        width: 20,
-                                        height: 20,
-                                      ),
-                                      SizedBox(width: 10,),
-                                      Text(
-                                        'Bạn bè',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w500
-                                        ),
-                                      ),
-                                    ]
-                                    /*Image.asset(
+                                    Image.asset(
                                       'assets/images/plus.png',
                                       color: Colors.white,
                                       width: 15,
@@ -311,203 +245,282 @@ class _ProfilePageState extends State<ProfilePage> {
                                     Text(
                                       'Thêm vào tin',
                                       style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500
                                       ),
-                                    ),*/
+                                    ),
                                   ],
                                 )
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 5,),
-                          TextButton(
-                              onPressed: (){},
-                              style: TextButton.styleFrom(
-                                  backgroundColor: Colors.grey[300],
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)
-                                  )
-                              ),
-                              child: Image.asset(
-                                  'assets/images/messenger.png',
-                                  width: 20,
-                                  height: 20,
-                              )
-                          ),
-                          SizedBox(width: 5,),
-                          TextButton(
-                              onPressed: (){
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditingPage(userInfo)))
+                            SizedBox(width: 5,),
+                            TextButton(
+                                onPressed: () async {
+                                  await Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditingPage(userInfo)))
                                     .then((value){
-                                  setState(() {
-                                    loading = false;
+                                      refresh();
                                   });
-                                  refresh();
-                                });
-                              },
-                              style: TextButton.styleFrom(
+                                },
+                                style: TextButton.styleFrom(
                                   backgroundColor: Colors.grey[300],
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)
                                   )
-                              ),
-                              child: Text(
-                                '...',
-                                style: TextStyle(
+                                ),
+                                child: Text(
+                                  '...',
+                                  style: TextStyle(
                                     fontSize: 17.5,
                                     color: Colors.black
-                                ),
-                              )
-                          )
-                        ],
-                      ),
-                    ),
-                  ]
-                ],
-              )
-          ),
-          SliverToBoxAdapter(
-            child: Divider(
-              thickness: 1,
-              color: Colors.grey[300],
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/images/home.png',
-                    width: 30,
-                    height: 30,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(width: 15,),
-                  RichText(
-                    text: TextSpan(
-                      text: 'Sống tại ',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400
-                      ),
-                      children: [
-                        TextSpan(
-                          text: userInfo.city,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500
-                          )
-                        )
-                      ]
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Divider(
-              thickness: 1,
-              color: Colors.grey[300],
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: FriendsContainer(),
-          ),
-          SliverToBoxAdapter(
-            child: Divider(
-              thickness: 10,
-              color: Colors.grey[300],
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Container(
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bài viết',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500
-                      ),
-                    ),
-                    Container(
-                      width: MediaQuery.sizeOf(context).width,
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      color: Colors.white,
-                      child: Row(
-                        children: [
-                          Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              child: ValueListenableBuilder(
-                                  valueListenable: avatarUrl,
-                                  builder: (context, value, child) {
-                                    return Avatar(avatarUrl.value, 40);
-                                  })
-                          ),
-                          Expanded(
-                            child: Container(
-                              //alignment: AlignmentDirectional.topStart,
-                                padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
-                                child: TextButton(
-                                  onPressed: () {
-                                    Navigator.push(context, MaterialPageRoute(builder: (context) => CreatePostPage())).then((value){
-                                      if (value != 'none'){
-                                        List<Post> tmp = [];
-                                        refreshPostCheck.value = tmp;
-                                      }
-                                    });
-                                  },
-                                  child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        'Bạn đang nghĩ gì',
-                                        style: TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 15
-                                        ),
-                                      )
                                   ),
                                 )
+                            )
+                          ],
+                        ),
+                      ),
+                    ]
+                    else...[
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                  onPressed: (){},
+                                  style: TextButton.styleFrom(
+                                      backgroundColor: Color(0xff0064ff),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10)
+                                      )
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      if (userInfo.isFriend == '0')...[],
+                                      if (userInfo.isFriend == '1')...[
+                                        Image.asset(
+                                          'assets/images/isfriend.png',
+                                          color: Colors.white,
+                                          width: 20,
+                                          height: 20,
+                                        ),
+                                        SizedBox(width: 10,),
+                                        Text(
+                                          'Bạn bè',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w500
+                                          ),
+                                        ),
+                                      ]
+                                      /*Image.asset(
+                                        'assets/images/plus.png',
+                                        color: Colors.white,
+                                        width: 15,
+                                        height: 15,
+                                      ),
+                                      SizedBox(width: 10,),
+                                      Text(
+                                        'Thêm vào tin',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w500
+                                        ),
+                                      ),*/
+                                    ],
+                                  )
+                              ),
                             ),
-                          ),
-                          IconButton(
-                            onPressed: (){},
-                            icon: Icon(
-                              Icons.photo_library,
-                              color: Colors.green,
+                            SizedBox(width: 5,),
+                            TextButton(
+                                onPressed: (){},
+                                style: TextButton.styleFrom(
+                                    backgroundColor: Colors.grey[300],
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10)
+                                    )
+                                ),
+                                child: Image.asset(
+                                    'assets/images/messenger.png',
+                                    width: 20,
+                                    height: 20,
+                                )
                             ),
-                          ),
-                        ],
-                      ), //Divider(height: 15, thickness: 10,)
+                            SizedBox(width: 5,),
+                            TextButton(
+                                onPressed: (){
+                                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditingPage(userInfo)))
+                                      .then((value){
+                                    setState(() {
+                                      loading = false;
+                                    });
+                                    refresh();
+                                  });
+                                },
+                                style: TextButton.styleFrom(
+                                    backgroundColor: Colors.grey[300],
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10)
+                                    )
+                                ),
+                                child: Text(
+                                  '...',
+                                  style: TextStyle(
+                                      fontSize: 17.5,
+                                      color: Colors.black
+                                  ),
+                                )
+                            )
+                          ],
+                        ),
+                      ),
+                    ]
+                  ],
+                )
+            ),
+            SliverToBoxAdapter(
+              child: Divider(
+                thickness: 1,
+                color: Colors.grey[300],
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/images/home.png',
+                      width: 30,
+                      height: 30,
+                      color: Colors.grey,
                     ),
+                    SizedBox(width: 15,),
+                    RichText(
+                      text: TextSpan(
+                        text: 'Sống tại ',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400
+                        ),
+                        children: [
+                          TextSpan(
+                            text: userInfo.city,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500
+                            )
+                          )
+                        ]
+                      ),
+                    )
                   ],
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Divider(
-              thickness: 10,
-              color: Colors.grey[300],
+            SliverToBoxAdapter(
+              child: Divider(
+                thickness: 1,
+                color: Colors.grey[300],
+              ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: ValueListenableBuilder(
-              valueListenable: refreshPostCheck,
-              builder: (context, value, child) {
-                return ProfilePostsContainer();
-              }
+            SliverToBoxAdapter(
+              child: FriendsContainer(),
+            ),
+            SliverToBoxAdapter(
+              child: Divider(
+                thickness: 10,
+                color: Colors.grey[300],
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bài viết',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500
+                        ),
+                      ),
+                      Container(
+                        width: MediaQuery.sizeOf(context).width,
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        color: Colors.white,
+                        child: Row(
+                          children: [
+                            Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: ValueListenableBuilder(
+                                    valueListenable: avatarUrl,
+                                    builder: (context, value, child) {
+                                      return Avatar(avatarUrl.value, 40);
+                                    })
+                            ),
+                            Expanded(
+                              child: Container(
+                                //alignment: AlignmentDirectional.topStart,
+                                  padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                                  child: TextButton(
+                                    onPressed: () {
+                                      Navigator.push(context, MaterialPageRoute(builder: (context) => CreatePostPage())).then((value){
+                                        if (value != 'none'){
+                                          List<Post> tmp = [];
+                                          refreshPostCheck.value = tmp;
+                                        }
+                                      });
+                                    },
+                                    child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          'Bạn đang nghĩ gì',
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 15
+                                          ),
+                                        )
+                                    ),
+                                  )
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: (){},
+                              icon: Icon(
+                                Icons.photo_library,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ), //Divider(height: 15, thickness: 10,)
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Divider(
+                thickness: 10,
+                color: Colors.grey[300],
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: ValueListenableBuilder(
+                valueListenable: refreshPostCheck,
+                builder: (context, value, child) {
+                  return ProfilePostsContainer();
+                }
+              )
             )
-          )
-        ],
+          ],
+        ),
       ),
       bottomSheet: (bottomSheetVisible != 'none')
       ? Column(
@@ -605,7 +618,7 @@ class _ProfilePageState extends State<ProfilePage> {
           GetUserInfo(widget.id).then((value){
             if (value.code == '1000'){
               if (field == 'avatar') {
-                appMain.currentUser.avatar = userInfo.avatar;
+                appMain.cache.currentUser.avatar = userInfo.avatar;
                 navbar.newsFeedsPage.avatarChange();
               }
               setState(() {bottomSheetVisible = 'none'; loading = true;});
@@ -712,7 +725,7 @@ Future<GetListPostsResponse> GetListPosts(String index) async {
     Uri.parse('https://it4788.catan.io.vn/get_list_posts'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer ${appMain.currentUser.token}'
+      'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
     },
     body: jsonEncode(<String, String>{
       'user_id': userInfo.id,
@@ -797,7 +810,7 @@ class _FriendsContainerState extends State<FriendsContainer> {
       Uri.parse('https://it4788.catan.io.vn/get_user_friends'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'index': '0',
@@ -891,9 +904,9 @@ class _FriendsContainerState extends State<FriendsContainer> {
                               width: MediaQuery.sizeOf(context).width / 3.5,
                               height: MediaQuery.sizeOf(context).width / 3.5,
                               decoration: BoxDecoration(
-                                color: Colors.red,
+                                color: Colors.white,
                                 image: DecorationImage(
-                                  image: Image.network(friendList[i].avatar).image,
+                                  image: friendList[i].avatar.isNotEmpty ? Image.network(friendList[i].avatar).image : Image.asset('assets/images/user.png').image,
                                   fit: BoxFit.cover
                                 )
                               ),
@@ -926,9 +939,9 @@ class _FriendsContainerState extends State<FriendsContainer> {
                                 width: MediaQuery.sizeOf(context).width / 3.5,
                                 height: MediaQuery.sizeOf(context).width / 3.5,
                                 decoration: BoxDecoration(
-                                    color: Colors.red,
+                                    color: Colors.white,
                                     image: DecorationImage(
-                                        image: Image.network(friendList[i].avatar).image,
+                                        image: friendList[i].avatar.isNotEmpty ? Image.network(friendList[i].avatar).image : Image.asset('assets/images/user.png').image,
                                         fit: BoxFit.cover
                                     )
                                 ),

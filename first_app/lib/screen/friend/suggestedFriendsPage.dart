@@ -45,7 +45,7 @@ class _SuggestedFriendPageState extends State<SuggestedFriendPage> {
       Uri.parse('https://it4788.catan.io.vn/get_suggested_friends'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         'index': index,
@@ -312,7 +312,7 @@ class _FriendContainerState extends State<FriendContainer> {
       Uri.parse('https://it4788.catan.io.vn/set_request_friend'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         "user_id": id
@@ -327,7 +327,7 @@ class _FriendContainerState extends State<FriendContainer> {
       Uri.parse('https://it4788.catan.io.vn/del_request_friend'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ${appMain.currentUser.token}'
+        'Authorization': 'Bearer ${appMain.cache.currentUser.token}'
       },
       body: jsonEncode(<String, String>{
         "user_id": id
