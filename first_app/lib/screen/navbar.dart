@@ -81,7 +81,10 @@ class _NavBarState extends State<NavBar> {
                       videoPage.scrollToTop();
                     }
                     if (index == 3){
-                      profilePage.refresh();
+                      profilePage.scrollToTop();
+                    }
+                    if (index == 4){
+                      notificationPage.scrollToTop();
                     }
                   }
                   selectedIndex.value = index;
